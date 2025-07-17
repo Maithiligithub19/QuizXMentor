@@ -1,0 +1,23 @@
+{% extends 'layout.html' %}
+{% block title %}Upload Questions{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6 col-12">
+    <div class="card p-4 mt-4">
+      <h2 class="mb-4 text-center">Upload Excel File with Questions</h2>
+      {% if message %}
+        <div class="alert alert-success text-center">{{ message }} <a href="/dashboard" class="btn btn-primary btn-sm ms-2">Back to Dashboard</a></div>
+      {% endif %}
+      <form method="POST" enctype="multipart/form-data">
+        <div class="mb-3">
+          <input type="file" name="file" accept=".xlsx" required class="form-control">
+        </div>
+        <button type="submit" class="btn btn-success w-100">Upload</button>
+      </form>
+      <div class="mt-3 text-center">
+        <a href="/dashboard" class="btn btn-primary">Back to Dashboard</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

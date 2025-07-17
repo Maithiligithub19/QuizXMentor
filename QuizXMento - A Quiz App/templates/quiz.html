@@ -1,0 +1,167 @@
+{% extends 'layout.html' %}
+{% block title %}Quiz{% endblock %}
+{% block content %}
+<style>
+  /* Custom radio button border and highlight */
+  .form-check-input[type="radio"] {
+    border: 2px solid #0d6efd;
+    box-shadow: 0 0 0 0.15rem rgba(13,110,253,.25);
+    width: 1.5em;
+    height: 1.5em;
+    margin-right: 0.7em;
+    cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .form-check-input[type="radio"]:checked {
+    border-color: #198754;
+    box-shadow: 0 0 0 0.2rem rgba(25,135,84,.25);
+  }
+  .form-check-label {
+    font-size: 1.5em;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  #question {
+    font-size: 2em;
+    font-weight: bold;
+    color: #212529;
+    margin-bottom: 1.2em;
+    text-align: center;
+  }
+  #question-container {
+    font-size: 1.2em;
+  }
+  h2.text-center {
+    font-size: 2.2em;
+    font-weight: bold;
+  }
+</style>
+<div class="row justify-content-center">
+  <div class="col-md-6 col-12">
+    <h2 class="mb-4 text-center">Quiz</h2>
+    <div id="question-container" class="card p-4 mb-4">
+      <div id="question" class="mb-3">Loading question...</div>
+      <form id="optionsForm">
+        <div class="mb-3">
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="option" id="optionA" value="A">
+            <label class="form-check-label" for="optionA" id="labelA"></label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="option" id="optionB" value="B">
+            <label class="form-check-label" for="optionB" id="labelB"></label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="option" id="optionC" value="C">
+            <label class="form-check-label" for="optionC" id="labelC"></label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="option" id="optionD" value="D">
+            <label class="form-check-label" for="optionD" id="labelD"></label>
+          </div>
+        </div>
+      </form>
+      <div id="timer" class="mb-3 fw-bold">Time Left: 30</div>
+      <div class="d-flex justify-content-between">
+        <button id="prevBtn" class="btn btn-secondary" type="button">Previous</button>
+        <button id="nextBtn" class="btn btn-primary" type="button">Next</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+let questions = [];
+let currentQuestionIndex = 0;
+let timerInterval;
+let timeLeft = 30;
+let userAnswers = {}; // question_id: selected_option
+
+function loadQuestion(index) {
+  const q = questions[index];
+  document.getElementById('question').innerText = q.question;
+  document.getElementById('labelA').innerText = q.option_a;
+  document.getElementById('labelB').innerText = q.option_b;
+  document.getElementById('labelC').innerText = q.option_c;
+  document.getElementById('labelD').innerText = q.option_d;
+  // Reset radio selection
+  document.querySelectorAll('input[name="option"]').forEach(radio => {
+    radio.checked = false;
+  });
+  // Set previously selected answer if exists
+  const selectedOption = userAnswers[q.id];
+  if (selectedOption) {
+    const radio = document.getElementById('option' + selectedOption);
+    if (radio) radio.checked = true;
+  }
+  // Reset timer
+  resetTimer();
+}
+
+function startTimer() {
+  timeLeft = 30;
+  document.getElementById('timer').innerText = `Time Left: ${timeLeft}`;
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    document.getElementById('timer').innerText = `Time Left: ${timeLeft}`;
+    if (timeLeft <= 0) {
+      saveAnswer();
+      goToNext();
+    }
+  }, 1000);
+}
+
+function resetTimer() {
+  clearInterval(timerInterval);
+  startTimer();
+}
+
+function saveAnswer() {
+  const selectedRadio = document.querySelector('input[name="option"]:checked');
+  if (selectedRadio) {
+    userAnswers[questions[currentQuestionIndex].id] = selectedRadio.value;
+  }
+}
+
+function goToNext() {
+  saveAnswer();
+  if (currentQuestionIndex < questions.length - 1) {
+    currentQuestionIndex++;
+    loadQuestion(currentQuestionIndex);
+  } else {
+    // Submit answers
+    fetch('/submit_answers', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ answers: userAnswers })
+    }).then(res => res.json())
+    .then(data => {
+      window.location.href = `/result?score=${data.score}&total=${questions.length}`;
+    });
+  }
+}
+
+function goToPrevious() {
+  saveAnswer();
+  if (currentQuestionIndex > 0) {
+    currentQuestionIndex--;
+    loadQuestion(currentQuestionIndex);
+  }
+}
+
+document.getElementById('nextBtn').addEventListener('click', goToNext);
+document.getElementById('prevBtn').addEventListener('click', goToPrevious);
+
+// No need for button click logic, radio selection is handled by browser
+
+fetch('/get_questions')
+  .then(res => res.json())
+  .then(data => {
+    questions = data.questions;
+    if (questions.length > 0) {
+      loadQuestion(currentQuestionIndex);
+    }
+  });
+</script>
+{% endblock %}

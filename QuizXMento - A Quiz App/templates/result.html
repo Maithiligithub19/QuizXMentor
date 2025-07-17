@@ -1,0 +1,21 @@
+
+{% extends 'layout.html' %}
+{% block title %}Result{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6 col-12">
+    <div class="card p-4 mt-4">
+      <h2 class="mb-4 text-center">Quiz Result</h2>
+      <div class="mb-3">
+        <span class="fw-bold">Your Score:</span> <span class="badge bg-success">{{ score }} / {{ total }}</span>
+      </div>
+      <div class="mb-3">
+        <span class="fw-bold">Incorrect Answers:</span> <span class="badge bg-danger">{{ incorrect }}</span>
+      </div>
+      <a href="/dashboard" class="btn btn-primary w-100">Back to Dashboard</a>
+    </div>
+  </div>
+</div>
+{% endblock %}
+</body>
+</html>
